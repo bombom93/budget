@@ -34,7 +34,7 @@ def login_form():
                 st.session_state.auth = True
                 st.session_state.username = username
                 st.success(f"{username}님, 환영합니다!")
-                st.switch_page("main")
+                st.switch_page("main.py")
             else:
                 st.error("❌ 아이디 또는 비밀번호가 잘못되었습니다.")
 
