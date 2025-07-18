@@ -32,9 +32,9 @@ def login_form():
         if st.button("로그인"):
             users = load_users()
             if ((users["username"] == username) & (users["password"] == password)).any():
-                st.session_state["auth"] = True
-                st.session_state["username"] = username
-                st.success(f"{username}님, 환영합니다! 새로고침 후 이용 가능합니다.")
+                st.session_state.auth = True
+                st.session_state.username = username
+                st.success(f"{username}님, 환영합니다!")
                 st.stop()
             else:
                 st.error("❌ 아이디 또는 비밀번호가 잘못되었습니다.")
@@ -66,7 +66,6 @@ username = st.session_state.username
 DATA_FILE = f"{username}_budget.csv"
 BUDGET_FILE = f"{username}_budget_settings.csv"
 
-
 # -------------------------------
 # 데이터 함수
 # -------------------------------
@@ -94,7 +93,7 @@ def save_budget(budget_df):
     budget_df.to_csv(BUDGET_FILE)
 
 # -------------------------------
-# 입력 폼
+# 앱 본문
 # -------------------------------
 st.set_page_config(page_title="가계부", page_icon="💰")
 st.title(f"💰 {username}님의 가계부")
@@ -124,7 +123,7 @@ with st.form("entry_form"):
         st.success("저장 완료!")
 
 # -------------------------------
-# 기간 필터
+# 필터링 및 출력
 # -------------------------------
 df = load_data()
 year_month = "선택된 기간 없음"
@@ -155,9 +154,6 @@ if not df.empty:
 else:
     df_filtered = pd.DataFrame()
 
-# -------------------------------
-# 예산 설정
-# -------------------------------
 st.sidebar.header("📌 예산 설정")
 budget_df = load_budget()
 edited_budget = st.sidebar.data_editor(
@@ -169,9 +165,6 @@ if st.sidebar.button("💾 예산 저장"):
     save_budget(edited_budget)
     st.sidebar.success("예산이 저장되었습니다!")
 
-# -------------------------------
-# 요약 출력
-# -------------------------------
 st.subheader(f"📊 {year_month} 내역 요약")
 if not df_filtered.empty:
     total_income = df_filtered[df_filtered["구분"] == "수입"]["금액"].sum()
