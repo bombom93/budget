@@ -34,8 +34,8 @@ def login_form():
             if ((users["username"] == username) & (users["password"] == password)).any():
                 st.session_state["auth"] = True
                 st.session_state["username"] = username
-                st.success(f"{username}님, 환영합니다!")
-                st.experimental_rerun()
+                st.success(f"{username}님, 환영합니다! 새로고침 후 이용 가능합니다.")
+                st.stop()
             else:
                 st.error("❌ 아이디 또는 비밀번호가 잘못되었습니다.")
 
