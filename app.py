@@ -96,7 +96,7 @@ def save_budget(budget_df):
 # 앱 본문
 # -------------------------------
 st.set_page_config(page_title="가계부", page_icon="💰")
-st.title(f"💰 {username}님의 가계부")
+st.title(f"💰 가계부")
 
 with st.form("entry_form"):
     col1, col2 = st.columns(2)
