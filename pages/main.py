@@ -12,7 +12,8 @@ if "username" not in st.session_state:
 # 로그인 상태 확인
 if not st.session_state.auth:
     st.warning("로그인이 필요합니다. 초기화면으로 이동합니다.")
-    st.switch_page("app.py")
+    st.page_link("login.py", label="🔑 로그인하러 가기")
+    st.stop()
 
 # 사용자별 파일
 username = st.session_state.username
@@ -48,7 +49,7 @@ def save_budget(budget_df):
 # -------------------------------
 # 앱 본문
 # -------------------------------
-st.set_page_config(page_title="가계부", page_icon="💰")
+st.set_page_config(page_title="가계부 메인", page_icon="💰")
 st.title(f"💰 {username}님의 가계부")
 
 with st.form("entry_form"):
