@@ -6,7 +6,19 @@ st.set_page_config(page_title="로그인", page_icon="🔐", layout="centered")
 st.title("🔐 가계부 로그인/회원가입")
 
 USER_FILE = Path("users.csv")
-
+st.markdown(
+    """
+    <style>
+        [data-testid="stSidebar"] {
+            display: none;
+        }
+        [data-testid="collapsedControl"] {
+            display: none;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 # 초기 사용자 데이터 생성
 if not USER_FILE.exists() or USER_FILE.stat().st_size == 0:
     df = pd.DataFrame([{"username": "admin", "password": "test123"}])
