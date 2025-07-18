@@ -1,14 +1,72 @@
 import streamlit as st
 import pandas as pd
-from datetime import date, datetime
 import matplotlib.pyplot as plt
+from datetime import date
 
-DATA_FILE = "my_budget.csv"
-BUDGET_FILE = "budget_settings.csv"
+USER_FILE = "users.csv"
 
-# --------------------------------------
-# 데이터 로드 및 저장 함수
-# --------------------------------------
+# -------------------------------
+# 사용자 인증 관련 함수
+# -------------------------------
+def load_users():
+    try:
+        return pd.read_csv(USER_FILE)
+    except FileNotFoundError:
+        return pd.DataFrame(columns=["username", "password"])
+
+def save_user(username, password):
+    users = load_users()
+    if username in users["username"].values:
+        return False
+    users = pd.concat([users, pd.DataFrame([{"username": username, "password": password}])], ignore_index=True)
+    users.to_csv(USER_FILE, index=False)
+    return True
+
+def login_form():
+    st.title("🔐 가계부 로그인 / 회원가입")
+    tabs = st.tabs(["로그인", "회원가입"])
+
+    with tabs[0]:
+        username = st.text_input("아이디", key="login_user")
+        password = st.text_input("비밀번호", type="password", key="login_pw")
+        if st.button("로그인"):
+            users = load_users()
+            if ((users["username"] == username) & (users["password"] == password)).any():
+                st.session_state["auth"] = True
+                st.session_state["username"] = username
+                st.success(f"{username}님, 환영합니다!")
+                st.experimental_rerun()
+            else:
+                st.error("❌ 아이디 또는 비밀번호가 잘못되었습니다.")
+
+    with tabs[1]:
+        new_user = st.text_input("새 아이디", key="new_user")
+        new_pw = st.text_input("새 비밀번호", type="password", key="new_pw")
+        if st.button("회원가입"):
+            if not new_user or not new_pw:
+                st.warning("아이디와 비밀번호를 모두 입력하세요.")
+            elif save_user(new_user, new_pw):
+                st.success("✅ 회원가입 성공! 로그인 해주세요.")
+            else:
+                st.error("❌ 이미 존재하는 아이디입니다.")
+
+if "auth" not in st.session_state:
+    st.session_state["auth"] = False
+
+if not st.session_state["auth"]:
+    login_form()
+    st.stop()
+
+# -------------------------------
+# 사용자별 파일 설정
+# -------------------------------
+username = st.session_state["username"]
+DATA_FILE = f"{username}_budget.csv"
+BUDGET_FILE = f"{username}_budget_settings.csv"
+
+# -------------------------------
+# 데이터 함수
+# -------------------------------
 def load_data():
     try:
         df = pd.read_csv(DATA_FILE, parse_dates=["날짜"])
@@ -32,21 +90,11 @@ def load_budget():
 def save_budget(budget_df):
     budget_df.to_csv(BUDGET_FILE)
 
-# --------------------------------------
-# 로그인 (간단 보호)
-# --------------------------------------
-st.set_page_config(page_title="나만의 가계부", page_icon="💰")
-st.sidebar.title("🔐 로그인")
-pw = st.sidebar.text_input("비밀번호", type="password")
-if pw != "mypassword123":
-    st.warning("접근 권한이 없습니다.")
-    st.stop()
-
-# --------------------------------------
-# 앱 제목 및 입력 폼
-# --------------------------------------
-st.title("💰 Streamlit 가계부")
-st.markdown("수입과 지출을 기록하고 예산을 관리하세요.")
+# -------------------------------
+# 입력 폼
+# -------------------------------
+st.set_page_config(page_title="가계부", page_icon="💰")
+st.title(f"💰 {username}님의 가계부")
 
 with st.form("entry_form"):
     col1, col2 = st.columns(2)
@@ -72,9 +120,9 @@ with st.form("entry_form"):
         save_data(new_row)
         st.success("저장 완료!")
 
-# --------------------------------------
-# 데이터 필터 (월/주/연도)
-# --------------------------------------
+# -------------------------------
+# 기간 필터
+# -------------------------------
 df = load_data()
 year_month = "선택된 기간 없음"
 if not df.empty:
@@ -104,9 +152,9 @@ if not df.empty:
 else:
     df_filtered = pd.DataFrame()
 
-# --------------------------------------
-# 예산 설정 (사이드바)
-# --------------------------------------
+# -------------------------------
+# 예산 설정
+# -------------------------------
 st.sidebar.header("📌 예산 설정")
 budget_df = load_budget()
 edited_budget = st.sidebar.data_editor(
@@ -118,9 +166,9 @@ if st.sidebar.button("💾 예산 저장"):
     save_budget(edited_budget)
     st.sidebar.success("예산이 저장되었습니다!")
 
-# --------------------------------------
-# 요약 출력 + 시각화
-# --------------------------------------
+# -------------------------------
+# 요약 출력
+# -------------------------------
 st.subheader(f"📊 {year_month} 내역 요약")
 if not df_filtered.empty:
     total_income = df_filtered[df_filtered["구분"] == "수입"]["금액"].sum()
@@ -135,7 +183,7 @@ if not df_filtered.empty:
 
     st.dataframe(df_filtered[["날짜", "구분", "카테고리", "금액", "결제수단", "메모"]].sort_values("날짜", ascending=False))
 
-    # 📊 카테고리별 지출 요약
+    # 지출 요약
     expense_summary = df_filtered[df_filtered["구분"] == "지출"].groupby("카테고리")["금액"].sum()
     st.subheader("📂 지출 카테고리별 요약")
     for cat, spent in expense_summary.items():
@@ -145,13 +193,13 @@ if not df_filtered.empty:
         st.write(f"**{cat}**: {spent:,.0f}원 / {budget:,.0f}원 ({remaining:,.0f}원 남음)")
         st.progress(percent)
 
-    # 📈 Pie Chart
+    # Pie Chart
     st.subheader("🍕 지출 비율(Pie Chart)")
     fig1, ax1 = plt.subplots()
     ax1.pie(expense_summary.values, labels=expense_summary.index, autopct="%1.1f%%")
     st.pyplot(fig1)
 
-    # 📈 Line Chart
+    # Line Chart
     st.subheader("📈 월별 지출 추이(Line Chart)")
     monthly = df[df["구분"] == "지출"].groupby(["년", "월"])["금액"].sum().reset_index()
     monthly["연-월"] = monthly["년"].astype(str) + "-" + monthly["월"].astype(str)
