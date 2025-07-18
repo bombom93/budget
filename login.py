@@ -24,6 +24,9 @@ if selected_tab == "로그인":
     if st.button("로그인"):
         try:
             users = pd.read_csv(USER_FILE)
+            if not all(col in users.columns for col in ["username", "password"]):
+                st.error("users.csv 파일에 'username' 또는 'password' 컬럼이 없습니다.")
+                st.stop()
         except pd.errors.EmptyDataError:
             st.error("사용자 데이터가 비어있습니다. 회원가입을 먼저 진행해주세요.")
             st.stop()
@@ -48,6 +51,8 @@ elif selected_tab == "회원가입":
         else:
             try:
                 users = pd.read_csv(USER_FILE)
+                if not all(col in users.columns for col in ["username", "password"]):
+                    users = pd.DataFrame(columns=["username", "password"])
             except pd.errors.EmptyDataError:
                 users = pd.DataFrame(columns=["username", "password"])
 
