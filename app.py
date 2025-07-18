@@ -50,19 +50,22 @@ def login_form():
             else:
                 st.error("❌ 이미 존재하는 아이디입니다.")
 
+# -------------------------------
+# 로그인 상태 초기화 및 보호
+# -------------------------------
 if "auth" not in st.session_state:
-    st.session_state["auth"] = False
+    st.session_state.auth = False
+if "username" not in st.session_state:
+    st.session_state.username = ""
 
-if not st.session_state["auth"]:
+if not st.session_state.auth:
     login_form()
     st.stop()
 
-# -------------------------------
-# 사용자별 파일 설정
-# -------------------------------
-username = st.session_state["username"]
+username = st.session_state.username
 DATA_FILE = f"{username}_budget.csv"
 BUDGET_FILE = f"{username}_budget_settings.csv"
+
 
 # -------------------------------
 # 데이터 함수
@@ -101,9 +104,9 @@ with st.form("entry_form"):
     with col1:
         date_input = st.date_input("날짜", date.today())
         category_type = st.selectbox("구분", ["지출", "수입"])
-        category = st.selectbox("카테고리", ["식비", "교통", "쇼핑", "고정비", "기타", "급여", "기타수입"])
+        category = st.selectbox("카테고리", ["식비", "간식", "교통", "의복/미용", "쿠팡/마트", "세금", "보험", "기타", "가족 경조사", "지인 경조사", "급여", "성과금", "금융수입", "기타수입"])
     with col2:
-        payment = st.selectbox("결제수단", ["카드", "현금", "이체", "없음"])
+        payment = st.selectbox("결제수단", ["체크카드","신용카드", "현금", "이체"])
         amount = st.number_input("금액", min_value=0, step=100)
     memo = st.text_input("메모 (선택)")
 
